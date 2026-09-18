@@ -1,0 +1,11 @@
+{
+  "domain": "wgdashboard_monitor",
+  "name": "WGDashboard Monitor",
+  "codeowners": ["@yourusername"],
+  "config_flow": true,
+  "documentation": "https://github.com/yourusername/wgdashboard_monitor",
+  "issue_tracker": "https://github.com/yourusername/wgdashboard_monitor/issues",
+  "iot_class": "local_polling",
+  "requirements": [],
+  "version": "0.1.0"
+}

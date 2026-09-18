@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connexion à WGDashboard",
+        "data": {
+          "host": "URL de l'hôte (ex. http://192.168.1.14:10086)",
+          "api_key": "Clé API",
+          "config_name": "Nom de la configuration WireGuard (ex. wg0)",
+          "verify_ssl": "Vérifier le certificat SSL"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Connexion impossible. Vérifiez l'hôte et la clé API."
+    },
+    "abort": {
+      "already_configured": "Cette configuration WGDashboard est déjà ajoutée."
+    }
+  }
+}
