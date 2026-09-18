@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -9,9 +10,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import WGDashboardApiError, WGDashboardClient
-from .const import DEFAULT_SCAN_INTERVAL, HANDSHAKE_TIMEOUT_SECONDS
+from .const import DEFAULT_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
+
+# Matches Python's str(timedelta) output, which is exactly what WGDashboard
+# 4.3.x returns for `latest_handshake`, e.g. "0:01:29" or "1 day, 20:44:15".
+_ELAPSED_RE = re.compile(r"(?:(\d+)\s+days?,\s*)?(\d+):(\d{2}):(\d{2})")
 
 
 def _find_peer_list(payload: dict[str, Any]) -> list[dict[str, Any]]:
@@ -35,17 +40,27 @@ def _peer_field(peer: dict[str, Any], *names: str, default: Any = None) -> Any:
 
 
 def _normalize_peer(peer: dict[str, Any]) -> dict[str, Any]:
-    """Map a raw WGDashboard peer dict onto a stable set of fields."""
+    """Map a raw WGDashboard peer dict (v4.3.x shape) onto a stable set of fields."""
     name = _peer_field(peer, "name", "Name", default="")
     peer_id = _peer_field(peer, "id", "public_key", "PublicKey", default=name or "unknown")
-    last_handshake_raw = _peer_field(peer, "latest_handshake", "LatestHandshake", "latest_handshake_at")
+    last_handshake_raw = _peer_field(peer, "latest_handshake", "LatestHandshake")
     endpoint = _peer_field(peer, "endpoint", "Endpoint", default="")
-    total_receive = _peer_field(peer, "total_receive", "TotalReceive", "cumu_receive", default=0)
-    total_sent = _peer_field(peer, "total_sent", "TotalSent", "cumu_sent", default=0)
+    status = _peer_field(peer, "status", "Status")
+    # cumu_receive/cumu_sent are the lifetime totals shown on the peer cards
+    # in the UI. total_receive/total_sent exist too but track something much
+    # smaller (looks like the current session only) - not what we want here.
+    total_receive = _peer_field(peer, "cumu_receive", "total_receive", default=0)
+    total_sent = _peer_field(peer, "cumu_sent", "total_sent", default=0)
     allowed_ips = _peer_field(peer, "allowed_ip", "AllowedIPs", default="")
 
-    last_handshake = _parse_timestamp(last_handshake_raw)
-    online = _is_recent(last_handshake)
+    last_handshake = _parse_elapsed_to_timestamp(last_handshake_raw)
+
+    if isinstance(status, str):
+        online = status.strip().lower() == "running"
+    elif isinstance(status, bool):
+        online = status
+    else:
+        online = last_handshake is not None
 
     return {
         "id": str(peer_id),
@@ -67,29 +82,31 @@ def _to_float(value: Any) -> float:
         return 0.0
 
 
-def _parse_timestamp(value: Any) -> datetime | None:
-    if not value:
+def _parse_elapsed_to_timestamp(value: Any) -> datetime | None:
+    """Turn a WGDashboard 'time since last handshake' string into a datetime.
+
+    WGDashboard returns an elapsed-time string (Python's str(timedelta)
+    format), e.g. "0:01:29" or "1 day, 20:44:15", or the literal
+    "No Handshake" when the peer has never connected. We convert that
+    elapsed time into an absolute UTC timestamp for HA's timestamp sensor.
+    """
+    if not value or not isinstance(value, str):
         return None
-    if isinstance(value, (int, float)):
-        try:
-            return datetime.fromtimestamp(value, tz=timezone.utc)
-        except (OverflowError, OSError, ValueError):
-            return None
-    if isinstance(value, str):
-        for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%dT%H:%M:%S.%f"):
-            try:
-                dt = datetime.strptime(value, fmt)
-                return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
-            except ValueError:
-                continue
-    return None
+    if value.strip().lower() in ("no handshake", "(none)", "none", ""):
+        return None
 
+    match = _ELAPSED_RE.search(value)
+    if not match:
+        return None
 
-def _is_recent(last_handshake: datetime | None) -> bool:
-    if last_handshake is None:
-        return False
-    age = datetime.now(timezone.utc) - last_handshake
-    return age.total_seconds() < HANDSHAKE_TIMEOUT_SECONDS
+    days, hours, minutes, seconds = match.groups()
+    delta = timedelta(
+        days=int(days or 0),
+        hours=int(hours),
+        minutes=int(minutes),
+        seconds=int(seconds),
+    )
+    return datetime.now(timezone.utc) - delta
 
 
 class WGDashboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -121,3 +138,4 @@ class WGDashboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "connected_peers": sum(1 for p in peers.values() if p["online"]),
             "raw": payload,
         }
+
