@@ -70,27 +70,11 @@ class WGDashboardClient:
     async def async_get_configuration_info(self, config_name: str) -> dict[str, Any]:
         """Detailed info (peers, handshakes, transfer) for one configuration.
 
-        WGDashboard 4.x mostly expects the configuration name as a query
-        string parameter here (like toggleWireguardConfiguration), not as a
-        path segment - a path-style call
-        (`/api/getWireguardConfigurationInfo/wg0`) returns 404 on 4.3.x.
-        We try the query-string form first and fall back to the older
-        path-style form so this keeps working across versions.
+        Confirmed via browser DevTools on WGDashboard 4.3.3:
+        GET /api/getWireguardConfigurationInfo?configurationName=wg0
+        (no trailing slash before the '?' - that trailing slash caused a 404).
         """
         from urllib.parse import quote
 
         name = quote(config_name)
-        result = await self._get(
-            f"/api/getWireguardConfigurationInfo/?configurationName={name}", allow_404=True
-        )
-        if result is not None:
-            return result
-
-        result = await self._get(f"/api/getWireguardConfigurationInfo/{name}", allow_404=True)
-        if result is not None:
-            return result
-
-        raise WGDashboardApiError(
-            "getWireguardConfigurationInfo returned 404 with both query-string and "
-            "path-style calls; the endpoint name may differ on this WGDashboard version"
-        )
+        return await self._get(f"/api/getWireguardConfigurationInfo?configurationName={name}")
