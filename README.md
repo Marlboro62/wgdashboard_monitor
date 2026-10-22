@@ -15,7 +15,7 @@ Intégration custom pour suivre l'état de vos peers WireGuard via [WGDashboard]
 ## Installation via HACS (dépôt personnalisé)
 
 1. HACS → menu ⋮ → **Dépôts personnalisés**
-2. URL : `https://github.com/<votre-user>/wgdashboard_monitor`, catégorie **Intégration**
+2. URL : `https://github.com/Marlboro62/wgdashboard_monitor`, catégorie **Intégration**
 3. Installer "WGDashboard Monitor", puis redémarrer Home Assistant
 
 ## Configuration

@@ -1,0 +1,36 @@
+name: Release
+
+# Publie automatiquement une release GitHub (tag vX.Y.Z) dès que la version
+# du manifest.json change sur main. HACS propose alors la mise à jour.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "custom_components/wgdashboard_monitor/manifest.json"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lire la version du manifest
+        id: version
+        run: |
+          VERSION=$(jq -r '.version' custom_components/wgdashboard_monitor/manifest.json)
+          echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Créer la release si le tag n'existe pas
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "La release $TAG existe déjà, rien à faire."
+            exit 0
+          fi
+          gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" --generate-notes
