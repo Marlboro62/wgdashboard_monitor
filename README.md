@@ -36,13 +36,19 @@ Intégration custom pour suivre l'état de vos peers WireGuard via [WGDashboard]
 - 1 `sensor` "dernier handshake" par peer (horodatage)
 - 2 `sensor` de volume de données par peer (reçu / envoyé)
 - 1 `sensor` global "peers connectés / total"
+- Un peer ajouté dans WGDashboard reçoit ses entités sans redémarrage ; un peer supprimé devient indisponible
+- Clé API refusée : Home Assistant demande la nouvelle clé (réauthentification), sans supprimer l'intégration
+- Diagnostics téléchargeables, sans la clé API, l'adresse du serveur, les clés, IP et noms des peers
 - Configuration 100% via l'UI (pas de YAML requis)
 
-## Installation via HACS (dépôt personnalisé)
+## Installation
 
-1. HACS → menu ⋮ → **Dépôts personnalisés**
-2. URL : `https://github.com/Marlboro62/wgdashboard_monitor`, catégorie **Intégration**
-3. Installer "WGDashboard Monitor", puis redémarrer Home Assistant
+### Avec HACS (recommandé)
+
+1. Dans HACS, cherchez **WGDashboard Monitor** et installez-la.
+2. Redémarrez Home Assistant.
+
+Si l'intégration n'apparaît pas encore dans la recherche de HACS, ajoutez le dépôt à la main : menu **⋮** → **Dépôts personnalisés**, adresse `https://github.com/Marlboro62/wgdashboard_monitor`, type **Intégration**, puis cherchez **WGDashboard Monitor**.
 
 ## Configuration
 
@@ -52,6 +58,7 @@ Intégration custom pour suivre l'état de vos peers WireGuard via [WGDashboard]
    - **Host URL** : ex. `http://192.168.1.14:10086`
    - **API key** : la clé créée à l'étape 1
    - **Config name** : le nom de votre configuration WireGuard (généralement `wg0`)
+   - **Vérifier le certificat SSL** : à décocher seulement pour une adresse `https://` avec un certificat auto-signé
 
 ## Gérer un serveur WireGuard de secours
 
@@ -59,7 +66,7 @@ Ajoutez l'intégration une seconde fois avec l'IP de votre LXC de secours. Vous 
 
 ## ⚠️ Note sur le format de l'API
 
-La documentation publique de WGDashboard est encore incomplète et le format JSON exact peut légèrement varier selon la version (3.x / 4.x). Le parsing dans `coordinator.py` essaie plusieurs noms de champs connus. Si vos entités remontent des valeurs vides, activez le mode debug (`custom_components.wgdashboard_monitor: debug` dans `logger:`) pour voir la réponse brute de l'API et ajuster `_normalize_peer()` en conséquence.
+La documentation publique de WGDashboard est encore incomplète et le format JSON exact peut légèrement varier selon la version (3.x / 4.x). Le parsing dans `coordinator.py` essaie plusieurs noms de champs connus. Si vos entités remontent des valeurs vides, activez le mode debug (`custom_components.wgdashboard_monitor: debug` dans `logger:`) pour voir la réponse brute de l'API, puis ouvrez une [issue](https://github.com/Marlboro62/wgdashboard_monitor/issues) (sans votre clé API ni vos adresses IP).
 
 ## Ping et traceroute par device
 

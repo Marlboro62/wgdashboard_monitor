@@ -6,10 +6,12 @@ import re
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import WGDashboardApiError, WGDashboardClient
+from .api import WGDashboardApiError, WGDashboardAuthError, WGDashboardClient
 from .const import DEFAULT_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,7 +73,6 @@ def _normalize_peer(peer: dict[str, Any]) -> dict[str, Any]:
         "total_receive_gb": _to_float(total_receive),
         "total_sent_gb": _to_float(total_sent),
         "online": online,
-        "raw": peer,
     }
 
 
@@ -112,10 +113,13 @@ def _parse_elapsed_to_timestamp(value: Any) -> datetime | None:
 class WGDashboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Polls WGDashboard and exposes normalized peer data."""
 
-    def __init__(self, hass: HomeAssistant, client: WGDashboardClient, config_name: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, client: WGDashboardClient, config_name: str
+    ) -> None:
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name="WGDashboard Monitor",
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
@@ -125,8 +129,11 @@ class WGDashboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         try:
             payload = await self._client.async_get_configuration_info(self._config_name)
+        except WGDashboardAuthError as err:
+            raise ConfigEntryAuthFailed(str(err)) from err
         except WGDashboardApiError as err:
             raise UpdateFailed(str(err)) from err
+        _LOGGER.debug("WGDashboard %s: %s", self._config_name, payload)
 
         peers_raw = _find_peer_list(payload)
         peers = {p["id"]: p for p in (_normalize_peer(p) for p in peers_raw)}
@@ -136,6 +143,5 @@ class WGDashboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "peers": peers,
             "total_peers": len(peers),
             "connected_peers": sum(1 for p in peers.values() if p["online"]),
-            "raw": payload,
         }
 

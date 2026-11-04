@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass, BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -15,12 +15,19 @@ from .coordinator import WGDashboardCoordinator
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    coordinator: WGDashboardCoordinator = hass.data[DOMAIN][entry.entry_id]
-    entities = [
-        WGDashboardPeerConnectedSensor(coordinator, entry, peer_id)
-        for peer_id in coordinator.data["peers"]
-    ]
-    async_add_entities(entities)
+    coordinator: WGDashboardCoordinator = entry.runtime_data
+    known: set[str] = set()
+
+    @callback
+    def _add_new_peers() -> None:
+        """Peers added in WGDashboard after setup get their entity too."""
+        new = [peer_id for peer_id in coordinator.data["peers"] if peer_id not in known]
+        if new:
+            known.update(new)
+            async_add_entities(WGDashboardPeerConnectedSensor(coordinator, entry, peer_id) for peer_id in new)
+
+    _add_new_peers()
+    entry.async_on_unload(coordinator.async_add_listener(_add_new_peers))
 
 
 class WGDashboardPeerConnectedSensor(CoordinatorEntity[WGDashboardCoordinator], BinarySensorEntity):
@@ -43,6 +50,11 @@ class WGDashboardPeerConnectedSensor(CoordinatorEntity[WGDashboardCoordinator], 
     @property
     def _peer(self) -> dict:
         return self.coordinator.data["peers"].get(self._peer_id, {})
+
+    @property
+    def available(self) -> bool:
+        """A peer removed from WGDashboard becomes unavailable."""
+        return super().available and self._peer_id in self.coordinator.data["peers"]
 
     @property
     def name(self) -> str:

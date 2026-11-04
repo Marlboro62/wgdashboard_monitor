@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -13,34 +14,33 @@ from .const import (
     CONF_VERIFY_SSL,
     DEFAULT_CONFIG_NAME,
     DEFAULT_VERIFY_SSL,
-    DOMAIN,
 )
 from .coordinator import WGDashboardCoordinator
 
-PLATFORMS = ["sensor", "binary_sensor"]
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
+
+type WGDashboardConfigEntry = ConfigEntry[WGDashboardCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    session = async_get_clientsession(
-        hass, verify_ssl=entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
-    )
+async def async_setup_entry(hass: HomeAssistant, entry: WGDashboardConfigEntry) -> bool:
+    """Set up WGDashboard Monitor from a config entry."""
+    verify_ssl = entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
     client = WGDashboardClient(
-        session,
+        async_get_clientsession(hass, verify_ssl=verify_ssl),
         entry.data[CONF_HOST],
         entry.data[CONF_API_KEY],
-        entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+        verify_ssl,
     )
-    config_name = entry.data.get(CONF_CONFIG_NAME, DEFAULT_CONFIG_NAME)
-    coordinator = WGDashboardCoordinator(hass, client, config_name)
+    coordinator = WGDashboardCoordinator(
+        hass, entry, client, entry.data.get(CONF_CONFIG_NAME, DEFAULT_CONFIG_NAME)
+    )
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unloaded:
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unloaded
+async def async_unload_entry(hass: HomeAssistant, entry: WGDashboardConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

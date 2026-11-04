@@ -10,7 +10,7 @@ CONF_SCAN_INTERVAL = "scan_interval"
 
 DEFAULT_CONFIG_NAME = "wg0"
 DEFAULT_SCAN_INTERVAL = 15  # seconds
-DEFAULT_VERIFY_SSL = False
+DEFAULT_VERIFY_SSL = True
 
 # WGDashboard considers a peer "online" if its last handshake is recent.
 # WireGuard peers re-handshake roughly every 2 minutes when active, so

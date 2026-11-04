@@ -1,15 +1,13 @@
 """Minimal async client for the WGDashboard REST API.
 
 Reference: https://docs.wgdashboard.dev/api/
-Note: WGDashboard's public docs are a work in progress and the exact
-JSON shape can vary slightly between versions (3.x vs 4.x). This client
-tries a couple of known endpoint/field name variants and falls back
-gracefully; if your instance returns something different, check the
-`raw` attribute exposed on the diagnostic sensor to adapt the parsing
-in coordinator.py.
+The JSON shape can vary slightly between WGDashboard versions (3.x / 4.x):
+coordinator.py tries the known field names. Enable debug logging for
+custom_components.wgdashboard_monitor to see the raw response.
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -19,9 +17,15 @@ from .const import API_HEADER_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
+REQUEST_TIMEOUT = aiohttp.ClientTimeout(total=10)
+
 
 class WGDashboardApiError(Exception):
-    """Raised when the WGDashboard API can't be reached or auth fails."""
+    """Raised when the WGDashboard API can't be reached or returns an error."""
+
+
+class WGDashboardAuthError(WGDashboardApiError):
+    """Raised when the API key is rejected."""
 
 
 class WGDashboardClient:
@@ -32,49 +36,48 @@ class WGDashboardClient:
         session: aiohttp.ClientSession,
         host: str,
         api_key: str,
-        verify_ssl: bool = False,
+        verify_ssl: bool = True,
     ) -> None:
         self._session = session
-        self._base_url = host.rstrip("/")
+        self._base_url = host.strip().rstrip("/")
         self._headers = {
             "content-type": "application/json",
             API_HEADER_KEY: api_key,
         }
-        self._verify_ssl = verify_ssl
+        # False disables certificate checks (self-signed HTTPS); None keeps the default checks
+        self._ssl: bool | None = None if verify_ssl else False
 
-    async def _get(self, path: str, *, allow_404: bool = False) -> dict[str, Any] | None:
+    async def _get(self, path: str, params: dict[str, str] | None = None) -> dict[str, Any]:
         url = f"{self._base_url}{path}"
         try:
             async with self._session.get(
-                url, headers=self._headers, ssl=self._verify_ssl, timeout=aiohttp.ClientTimeout(total=10)
+                url, headers=self._headers, params=params, ssl=self._ssl, timeout=REQUEST_TIMEOUT
             ) as resp:
-                if resp.status == 401:
-                    raise WGDashboardApiError("Invalid or expired API key")
-                if resp.status == 404 and allow_404:
-                    return None
+                if resp.status in (401, 403):
+                    raise WGDashboardAuthError("Invalid or expired API key")
                 if resp.status != 200:
-                    raise WGDashboardApiError(f"Unexpected status {resp.status} from {url}")
-                return await resp.json(content_type=None)
-        except aiohttp.ClientError as err:
-            raise WGDashboardApiError(f"Cannot reach WGDashboard at {url}: {err}") from err
+                    raise WGDashboardApiError(f"Unexpected status {resp.status} from {path}")
+                payload = await resp.json(content_type=None)
+        except (aiohttp.ClientError, asyncio.TimeoutError) as err:
+            raise WGDashboardApiError(f"Cannot reach WGDashboard: {err}") from err
+        except ValueError as err:
+            raise WGDashboardApiError(f"Invalid JSON from {path}") from err
+        if not isinstance(payload, dict):
+            raise WGDashboardApiError(f"Unexpected response from {path}")
+        if payload.get("status") is False:
+            raise WGDashboardApiError(str(payload.get("message") or f"Request {path} refused"))
+        return payload
 
     async def async_test_connection(self) -> bool:
-        """Used by the config flow to validate host/api key."""
+        """Used by the config flow to validate host and API key."""
         await self._get("/api/getWireguardConfigurations")
         return True
 
-    async def async_get_configurations(self) -> dict[str, Any]:
-        """List all WireGuard configurations known to WGDashboard."""
-        return await self._get("/api/getWireguardConfigurations")
-
     async def async_get_configuration_info(self, config_name: str) -> dict[str, Any]:
-        """Detailed info (peers, handshakes, transfer) for one configuration.
+        """Peers, handshakes and transfer totals for one configuration.
 
-        Confirmed via browser DevTools on WGDashboard 4.3.3:
-        GET /api/getWireguardConfigurationInfo?configurationName=wg0
-        (no trailing slash before the '?' - that trailing slash caused a 404).
+        WGDashboard 4.3.x: GET /api/getWireguardConfigurationInfo?configurationName=wg0
         """
-        from urllib.parse import quote
-
-        name = quote(config_name)
-        return await self._get(f"/api/getWireguardConfigurationInfo?configurationName={name}")
+        return await self._get(
+            "/api/getWireguardConfigurationInfo", {"configurationName": config_name}
+        )

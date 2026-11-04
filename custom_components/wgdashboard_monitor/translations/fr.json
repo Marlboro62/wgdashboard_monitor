@@ -4,18 +4,34 @@
       "user": {
         "title": "Connexion à WGDashboard",
         "data": {
-          "host": "URL de l'hôte (ex. http://192.168.1.14:10086)",
+          "host": "Adresse de WGDashboard",
           "api_key": "Clé API",
-          "config_name": "Nom de la configuration WireGuard (ex. wg0)",
+          "config_name": "Nom de la configuration WireGuard",
           "verify_ssl": "Vérifier le certificat SSL"
+        },
+        "data_description": {
+          "host": "Par exemple http://192.168.1.14:10086",
+          "api_key": "WGDashboard → Settings → API Key",
+          "config_name": "En général wg0",
+          "verify_ssl": "À décocher uniquement pour une adresse HTTPS avec un certificat auto-signé"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Nouvelle clé API WGDashboard",
+        "description": "La clé API de {host} a été refusée. Créez-en une nouvelle dans WGDashboard (Settings → API Key).",
+        "data": {
+          "api_key": "Clé API"
         }
       }
     },
     "error": {
-      "cannot_connect": "Connexion impossible. Vérifiez l'hôte et la clé API."
+      "cannot_connect": "Connexion impossible. Vérifiez l'adresse.",
+      "invalid_auth": "La clé API a été refusée.",
+      "invalid_host": "Indiquez une adresse qui commence par http:// ou https://"
     },
     "abort": {
-      "already_configured": "Cette configuration WGDashboard est déjà ajoutée."
+      "already_configured": "Cette configuration WGDashboard est déjà ajoutée.",
+      "reauth_successful": "La clé API a été mise à jour."
     }
   }
 }
