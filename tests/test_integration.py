@@ -83,3 +83,13 @@ async def test_diagnostics_redacted(hass: HomeAssistant, aioclient_mock: Aiohttp
     text = str(await async_get_config_entry_diagnostics(hass, entry))
     for secret in ("secret", "wg.test", "AAA=", "203.0.113.7", "10.0.0.2", "Phone"):
         assert secret not in text
+
+
+async def test_debug_log_has_no_secrets(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog) -> None:
+    peer = {**_peer("AAA=", "Phone"), "private_key": "PRIVATEKEYSECRET=", "preshared_key": "PSKSECRET="}
+    aioclient_mock.get(INFO, json=_info(peer))
+    caplog.set_level("DEBUG", logger="custom_components.wgdashboard_monitor")
+    await _setup(hass)
+    for secret in ("PRIVATEKEYSECRET", "PSKSECRET", "203.0.113.7", "10.0.0.2", "Phone", "secret"):
+        assert secret not in caplog.text
+    assert "1 peers, 1 connected" in caplog.text

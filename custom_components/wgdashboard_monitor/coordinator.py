@@ -133,10 +133,17 @@ class WGDashboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise ConfigEntryAuthFailed(str(err)) from err
         except WGDashboardApiError as err:
             raise UpdateFailed(str(err)) from err
-        _LOGGER.debug("WGDashboard %s: %s", self._config_name, payload)
-
         peers_raw = _find_peer_list(payload)
         peers = {p["id"]: p for p in (_normalize_peer(p) for p in peers_raw)}
+        # Jamais la réponse brute : elle contient les clés privées et partagées des peers.
+        # Seuls le nombre de peers et les noms des champs reçus (sans leurs valeurs) sont journalisés.
+        _LOGGER.debug(
+            "WGDashboard %s: %d peers, %d connected, peer fields: %s",
+            self._config_name,
+            len(peers),
+            sum(1 for p in peers.values() if p["online"]),
+            sorted({str(k) for raw in peers_raw if isinstance(raw, dict) for k in raw}),
+        )
 
         return {
             "config_name": self._config_name,

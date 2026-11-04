@@ -66,7 +66,7 @@ Ajoutez l'intégration une seconde fois avec l'IP de votre LXC de secours. Vous 
 
 ## ⚠️ Note sur le format de l'API
 
-La documentation publique de WGDashboard est encore incomplète et le format JSON exact peut légèrement varier selon la version (3.x / 4.x). Le parsing dans `coordinator.py` essaie plusieurs noms de champs connus. Si vos entités remontent des valeurs vides, activez le mode debug (`custom_components.wgdashboard_monitor: debug` dans `logger:`) pour voir la réponse brute de l'API, puis ouvrez une [issue](https://github.com/Marlboro62/wgdashboard_monitor/issues) (sans votre clé API ni vos adresses IP).
+La documentation publique de WGDashboard est encore incomplète et le format JSON exact peut légèrement varier selon la version (3.x / 4.x). Le parsing dans `coordinator.py` essaie plusieurs noms de champs connus. Si vos entités remontent des valeurs vides, ouvrez une [issue](https://github.com/Marlboro62/wgdashboard_monitor/issues) avec les **diagnostics** de l'intégration (Paramètres → Appareils et services → WGDashboard Monitor → ⋮ → Télécharger les diagnostics) : la clé API, l'adresse du serveur, les noms, les clés et les adresses IP des peers y sont masqués. En mode debug (`custom_components.wgdashboard_monitor: debug`), le journal indique seulement le nombre de peers et les noms des champs reçus, jamais leurs valeurs : l'intégration n'écrit aucune clé WireGuard dans le journal.
 
 ## Ping et traceroute par device
 
