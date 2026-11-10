@@ -33,5 +33,39 @@
       "already_configured": "Cette configuration WGDashboard est déjà ajoutée.",
       "reauth_successful": "La clé API a été mise à jour."
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connected": {
+        "name": "{peer} connecté"
+      }
+    },
+    "sensor": {
+      "connected_peers": {
+        "name": "Pairs connectés",
+        "state_attributes": {
+          "total_peers": {
+            "name": "Nombre total de pairs"
+          }
+        }
+      },
+      "last_handshake": {
+        "name": "{peer} dernière connexion",
+        "state_attributes": {
+          "endpoint": {
+            "name": "Point d'accès"
+          },
+          "allowed_ips": {
+            "name": "IP autorisées"
+          }
+        }
+      },
+      "data_received": {
+        "name": "{peer} données reçues"
+      },
+      "data_sent": {
+        "name": "{peer} données envoyées"
+      }
+    }
   }
 }

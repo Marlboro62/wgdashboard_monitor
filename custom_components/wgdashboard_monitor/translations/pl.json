@@ -1,0 +1,71 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Połączenie z WGDashboard",
+        "data": {
+          "host": "Adres WGDashboard",
+          "api_key": "Klucz API",
+          "config_name": "Nazwa konfiguracji WireGuard",
+          "verify_ssl": "Weryfikuj certyfikat SSL"
+        },
+        "data_description": {
+          "host": "Na przykład http://192.168.1.14:10086",
+          "api_key": "WGDashboard → Settings → API Key",
+          "config_name": "Zwykle wg0",
+          "verify_ssl": "Wyłącz tylko dla adresu HTTPS z certyfikatem samopodpisanym"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Nowy klucz API WGDashboard",
+        "description": "Klucz API dla {host} został odrzucony. Utwórz nowy w WGDashboard (Settings → API Key).",
+        "data": {
+          "api_key": "Klucz API"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Nie można się połączyć. Sprawdź adres.",
+      "invalid_auth": "Klucz API został odrzucony.",
+      "invalid_host": "Podaj adres zaczynający się od http:// lub https://"
+    },
+    "abort": {
+      "already_configured": "Ta konfiguracja WGDashboard jest już dodana.",
+      "reauth_successful": "Klucz API został zaktualizowany."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connected": {
+        "name": "{peer} połączony"
+      }
+    },
+    "sensor": {
+      "connected_peers": {
+        "name": "Połączone urządzenia",
+        "state_attributes": {
+          "total_peers": {
+            "name": "Wszystkie urządzenia"
+          }
+        }
+      },
+      "last_handshake": {
+        "name": "{peer} ostatnie połączenie",
+        "state_attributes": {
+          "endpoint": {
+            "name": "Punkt końcowy"
+          },
+          "allowed_ips": {
+            "name": "Dozwolone adresy IP"
+          }
+        }
+      },
+      "data_received": {
+        "name": "{peer} dane odebrane"
+      },
+      "data_sent": {
+        "name": "{peer} dane wysłane"
+      }
+    }
+  }
+}

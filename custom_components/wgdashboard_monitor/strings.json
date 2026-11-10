@@ -33,5 +33,39 @@
       "already_configured": "This WGDashboard configuration is already set up.",
       "reauth_successful": "The API key was updated."
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connected": {
+        "name": "{peer} connected"
+      }
+    },
+    "sensor": {
+      "connected_peers": {
+        "name": "Connected peers",
+        "state_attributes": {
+          "total_peers": {
+            "name": "Total peers"
+          }
+        }
+      },
+      "last_handshake": {
+        "name": "{peer} last handshake",
+        "state_attributes": {
+          "endpoint": {
+            "name": "Endpoint"
+          },
+          "allowed_ips": {
+            "name": "Allowed IPs"
+          }
+        }
+      },
+      "data_received": {
+        "name": "{peer} data received"
+      },
+      "data_sent": {
+        "name": "{peer} data sent"
+      }
+    }
   }
 }

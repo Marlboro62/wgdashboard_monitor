@@ -93,3 +93,28 @@ async def test_debug_log_has_no_secrets(hass: HomeAssistant, aioclient_mock: Aio
     for secret in ("PRIVATEKEYSECRET", "PSKSECRET", "203.0.113.7", "10.0.0.2", "Phone", "secret"):
         assert secret not in caplog.text
     assert "1 peers, 1 connected" in caplog.text
+
+
+async def test_entity_names_follow_language(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    """Noms des entités dans la langue de Home Assistant, avec le nom du peer (renommage suivi)."""
+    hass.config.language = "fr"
+    aioclient_mock.get(INFO, json=_info(_peer("AAA=", "Phone")))
+    entry = await _setup(hass)
+    reg = er.async_get(hass)
+
+    def name(domain: str, suffix: str) -> str:
+        return hass.states.get(reg.async_get_entity_id(domain, DOMAIN, f"{entry.entry_id}_{suffix}")).attributes["friendly_name"]
+
+    assert name("binary_sensor", "AAA=_connected") == "WGDashboard (wg0) Phone connecté"
+    assert name("sensor", "AAA=_receive") == "WGDashboard (wg0) Phone données reçues"
+    assert name("sensor", "AAA=_sent") == "WGDashboard (wg0) Phone données envoyées"
+    assert name("sensor", "AAA=_last_handshake") == "WGDashboard (wg0) Phone dernière connexion"
+    assert name("sensor", "connected_peers") == "WGDashboard (wg0) Pairs connectés"
+    # identifiants d'entité toujours en anglais (automatisations existantes inchangées)
+    assert reg.async_get_entity_id("binary_sensor", DOMAIN, f"{entry.entry_id}_AAA=_connected") == "binary_sensor.wgdashboard_wg0_phone_connected"
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(INFO, json=_info(_peer("AAA=", "Téléphone")))
+    await entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+    assert name("binary_sensor", "AAA=_connected") == "WGDashboard (wg0) Téléphone connecté"

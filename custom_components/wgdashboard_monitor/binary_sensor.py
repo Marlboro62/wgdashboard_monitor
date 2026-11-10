@@ -6,10 +6,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import WGDashboardCoordinator
+from .entity import WGDashboardPeerEntity
 
 
 async def async_setup_entry(
@@ -30,15 +30,14 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(_add_new_peers))
 
 
-class WGDashboardPeerConnectedSensor(CoordinatorEntity[WGDashboardCoordinator], BinarySensorEntity):
+class WGDashboardPeerConnectedSensor(WGDashboardPeerEntity, BinarySensorEntity):
     """Whether a peer's last handshake is recent enough to be 'connected'."""
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
-    _attr_has_entity_name = True
+    _attr_translation_key = "connected"
 
     def __init__(self, coordinator: WGDashboardCoordinator, entry: ConfigEntry, peer_id: str) -> None:
-        super().__init__(coordinator)
-        self._peer_id = peer_id
+        super().__init__(coordinator, peer_id)
         self._attr_unique_id = f"{entry.entry_id}_{peer_id}_connected"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
@@ -46,19 +45,6 @@ class WGDashboardPeerConnectedSensor(CoordinatorEntity[WGDashboardCoordinator], 
             manufacturer="WGDashboard",
             model="WireGuard VPN",
         )
-
-    @property
-    def _peer(self) -> dict:
-        return self.coordinator.data["peers"].get(self._peer_id, {})
-
-    @property
-    def available(self) -> bool:
-        """A peer removed from WGDashboard becomes unavailable."""
-        return super().available and self._peer_id in self.coordinator.data["peers"]
-
-    @property
-    def name(self) -> str:
-        return f"{self._peer.get('name', self._peer_id)} connected"
 
     @property
     def is_on(self) -> bool:
