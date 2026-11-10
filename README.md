@@ -40,7 +40,7 @@ Intégration custom pour suivre l'état de vos peers WireGuard via [WGDashboard]
 - Clé API refusée : Home Assistant demande la nouvelle clé (réauthentification), sans supprimer l'intégration
 - Diagnostics téléchargeables, sans la clé API, l'adresse du serveur, les clés, IP et noms des peers
 - Configuration 100% via l'UI (pas de YAML requis)
-- Interface en **français**, **anglais** et **polonais** : noms des entités et écrans de configuration dans la langue de Home Assistant (Paramètres → Système → Général), par exemple « Téléphone connecté », « Téléphone données reçues ». Les autres langues affichent l'anglais. Les identifiants d'entité (`binary_sensor.…_connected`) restent les mêmes, en anglais : vos automatisations et cartes ne changent pas
+- Interface en **français**, **anglais** et **polonais** : noms des entités et écrans de configuration dans la langue de Home Assistant (Paramètres → Système → Général), par exemple « Téléphone connecté », « Téléphone données reçues ». Les autres langues affichent l'anglais. Les identifiants des entités déjà créées (`binary_sensor.…_connected`) ne changent pas : vos automatisations et cartes continuent de fonctionner. Une nouvelle installation crée ses identifiants dans la langue de Home Assistant
 
 ## Installation
 
