@@ -34,4 +34,6 @@ class WGDashboardPeerEntity(CoordinatorEntity[WGDashboardCoordinator]):
         """A peer renamed in WGDashboard gets its new name."""
         if self._peer_id in self.coordinator.data["peers"] and self._attr_translation_placeholders.get("peer") != self._peer_name():
             self._attr_translation_placeholders = {"peer": self._peer_name()}
+            # le nom traduit est mis en cache par Home Assistant : il est recalculé avec le nouveau nom du peer
+            self.__dict__.pop("name", None)
         super()._handle_coordinator_update()
