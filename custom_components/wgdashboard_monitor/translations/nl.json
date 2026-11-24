@@ -1,0 +1,71 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Verbinden met WGDashboard",
+        "data": {
+          "host": "Host-URL",
+          "api_key": "API-sleutel",
+          "config_name": "Naam van de WireGuard-configuratie",
+          "verify_ssl": "SSL-certificaat controleren"
+        },
+        "data_description": {
+          "host": "Adres van WGDashboard, bijvoorbeeld http://192.168.1.14:10086",
+          "api_key": "WGDashboard → Instellingen → API-sleutel",
+          "config_name": "Meestal wg0",
+          "verify_ssl": "Alleen uitzetten voor een HTTPS-adres met een zelfondertekend certificaat"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Nieuwe WGDashboard-API-sleutel",
+        "description": "De API-sleutel voor {host} is geweigerd. Maak een nieuwe aan in WGDashboard (Instellingen → API-sleutel).",
+        "data": {
+          "api_key": "API-sleutel"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbinding mislukt. Controleer de host-URL.",
+      "invalid_auth": "De API-sleutel is geweigerd.",
+      "invalid_host": "Voer een adres in dat begint met http:// of https://"
+    },
+    "abort": {
+      "already_configured": "Deze WGDashboard-configuratie is al ingesteld.",
+      "reauth_successful": "De API-sleutel is bijgewerkt."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connected": {
+        "name": "{peer} verbonden"
+      }
+    },
+    "sensor": {
+      "connected_peers": {
+        "name": "Verbonden peers",
+        "state_attributes": {
+          "total_peers": {
+            "name": "Totaal aantal peers"
+          }
+        }
+      },
+      "last_handshake": {
+        "name": "Laatste handshake van {peer}",
+        "state_attributes": {
+          "endpoint": {
+            "name": "Endpoint"
+          },
+          "allowed_ips": {
+            "name": "Toegestane IP's"
+          }
+        }
+      },
+      "data_received": {
+        "name": "Ontvangen data van {peer}"
+      },
+      "data_sent": {
+        "name": "Verzonden data van {peer}"
+      }
+    }
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connetti a WGDashboard",
+        "data": {
+          "host": "URL dell'host",
+          "api_key": "Chiave API",
+          "config_name": "Nome della configurazione WireGuard",
+          "verify_ssl": "Verifica il certificato SSL"
+        },
+        "data_description": {
+          "host": "Indirizzo di WGDashboard, ad esempio http://192.168.1.14:10086",
+          "api_key": "WGDashboard → Impostazioni → Chiave API",
+          "config_name": "Di solito wg0",
+          "verify_ssl": "Disattiva solo per un indirizzo HTTPS con certificato autofirmato"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Nuova chiave API di WGDashboard",
+        "description": "La chiave API per {host} è stata rifiutata. Creane una nuova in WGDashboard (Impostazioni → Chiave API).",
+        "data": {
+          "api_key": "Chiave API"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Connessione non riuscita. Controlla l'URL dell'host.",
+      "invalid_auth": "La chiave API è stata rifiutata.",
+      "invalid_host": "Inserisci un indirizzo che inizi con http:// o https://"
+    },
+    "abort": {
+      "already_configured": "Questa configurazione di WGDashboard è già impostata.",
+      "reauth_successful": "La chiave API è stata aggiornata."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connected": {
+        "name": "{peer} connesso"
+      }
+    },
+    "sensor": {
+      "connected_peers": {
+        "name": "Peer connessi",
+        "state_attributes": {
+          "total_peers": {
+            "name": "Peer totali"
+          }
+        }
+      },
+      "last_handshake": {
+        "name": "Ultimo handshake di {peer}",
+        "state_attributes": {
+          "endpoint": {
+            "name": "Endpoint"
+          },
+          "allowed_ips": {
+            "name": "IP consentiti"
+          }
+        }
+      },
+      "data_received": {
+        "name": "Dati ricevuti da {peer}"
+      },
+      "data_sent": {
+        "name": "Dati inviati da {peer}"
+      }
+    }
+  }
+}

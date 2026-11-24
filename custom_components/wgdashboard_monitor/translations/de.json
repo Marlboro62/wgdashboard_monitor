@@ -1,0 +1,71 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Mit WGDashboard verbinden",
+        "data": {
+          "host": "Host-URL",
+          "api_key": "API-Schlüssel",
+          "config_name": "Name der WireGuard-Konfiguration",
+          "verify_ssl": "SSL-Zertifikat prüfen"
+        },
+        "data_description": {
+          "host": "Adresse von WGDashboard, zum Beispiel http://192.168.1.14:10086",
+          "api_key": "WGDashboard → Einstellungen → API-Schlüssel",
+          "config_name": "Meist wg0",
+          "verify_ssl": "Nur für eine HTTPS-Adresse mit selbstsigniertem Zertifikat ausschalten"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Neuer WGDashboard-API-Schlüssel",
+        "description": "Der API-Schlüssel für {host} wurde abgelehnt. Erstelle in WGDashboard einen neuen (Einstellungen → API-Schlüssel).",
+        "data": {
+          "api_key": "API-Schlüssel"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung fehlgeschlagen. Prüfe die Host-URL.",
+      "invalid_auth": "Der API-Schlüssel wurde abgelehnt.",
+      "invalid_host": "Gib eine Adresse ein, die mit http:// oder https:// beginnt"
+    },
+    "abort": {
+      "already_configured": "Diese WGDashboard-Konfiguration ist bereits eingerichtet.",
+      "reauth_successful": "Der API-Schlüssel wurde aktualisiert."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connected": {
+        "name": "{peer} verbunden"
+      }
+    },
+    "sensor": {
+      "connected_peers": {
+        "name": "Verbundene Peers",
+        "state_attributes": {
+          "total_peers": {
+            "name": "Peers insgesamt"
+          }
+        }
+      },
+      "last_handshake": {
+        "name": "{peer} letzter Handshake",
+        "state_attributes": {
+          "endpoint": {
+            "name": "Endpunkt"
+          },
+          "allowed_ips": {
+            "name": "Erlaubte IPs"
+          }
+        }
+      },
+      "data_received": {
+        "name": "{peer} empfangene Daten"
+      },
+      "data_sent": {
+        "name": "{peer} gesendete Daten"
+      }
+    }
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Conectar con WGDashboard",
+        "data": {
+          "host": "URL del host",
+          "api_key": "Clave de API",
+          "config_name": "Nombre de la configuración WireGuard",
+          "verify_ssl": "Verificar el certificado SSL"
+        },
+        "data_description": {
+          "host": "Dirección de WGDashboard, por ejemplo http://192.168.1.14:10086",
+          "api_key": "WGDashboard → Ajustes → Clave de API",
+          "config_name": "Normalmente wg0",
+          "verify_ssl": "Desactívalo solo para una dirección HTTPS con certificado autofirmado"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Nueva clave de API de WGDashboard",
+        "description": "Se rechazó la clave de API de {host}. Crea una nueva en WGDashboard (Ajustes → Clave de API).",
+        "data": {
+          "api_key": "Clave de API"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "No se pudo conectar. Comprueba la URL del host.",
+      "invalid_auth": "Se rechazó la clave de API.",
+      "invalid_host": "Introduce una dirección que empiece por http:// o https://"
+    },
+    "abort": {
+      "already_configured": "Esta configuración de WGDashboard ya está configurada.",
+      "reauth_successful": "Se actualizó la clave de API."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connected": {
+        "name": "{peer} conectado"
+      }
+    },
+    "sensor": {
+      "connected_peers": {
+        "name": "Peers conectados",
+        "state_attributes": {
+          "total_peers": {
+            "name": "Peers en total"
+          }
+        }
+      },
+      "last_handshake": {
+        "name": "Último handshake de {peer}",
+        "state_attributes": {
+          "endpoint": {
+            "name": "Punto de acceso"
+          },
+          "allowed_ips": {
+            "name": "IP permitidas"
+          }
+        }
+      },
+      "data_received": {
+        "name": "Datos recibidos por {peer}"
+      },
+      "data_sent": {
+        "name": "Datos enviados por {peer}"
+      }
+    }
+  }
+}
